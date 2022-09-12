@@ -29,6 +29,7 @@
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\README.md" />
     <None Include="..\Shaders\fragment.frag" />
     <None Include="..\Shaders\vertex.vert" />
   </ItemGroup>
