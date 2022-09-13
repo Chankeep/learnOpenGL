@@ -1,5 +1,8 @@
 #include "shader.h"
 #include "image.h"
+#include <glm/glm.hpp>
+#include <glm/matrix.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <GLFW/glfw3.h>
 
 constexpr unsigned int SCR_WIDTH = 1200;
@@ -62,18 +65,17 @@ int main()
 	
 	//定义图形vertex
 	float vertices[] = {
-		//     ---- 位置 ----       ---- 颜色 ----     - 纹理坐标 -
-			 0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // 右上
-			 0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // 右下
-			-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // 左下
-			-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // 左上
+		//     ---- 位置 ----       - 纹理坐标 -
+			 0.5f,  0.5f, 0.0f,     1.0f, 1.0f,   // 右上
+			 0.5f, -0.5f, 0.0f,     1.0f, 0.0f,   // 右下
+			-0.5f, -0.5f, 0.0f,		0.0f, 0.0f,   // 左下
+			-0.5f,  0.5f, 0.0f,		0.0f, 1.0f    // 左上
 	};
 
 	int indices[] = {
 		1, 2, 3,
 		0, 1, 3
 	};
-
 
 	unsigned int VAO, VBO, EBO;
 	glGenVertexArrays(1, &VAO);
@@ -90,17 +92,14 @@ int main()
 	
 	
 	//设置顶点属性指针，解析顶点数据
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), static_cast<void*>(nullptr));
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), static_cast<void*>(nullptr));
 	
 	//以顶点属性位置值作为参数启用顶点属性，默认禁用
 	glEnableVertexAttribArray(0);
 
 	//启用顶点色
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
-	//启用UV
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
 
 	unsigned int texture1, texture2;
 	glGenTextures(1, &texture1);
@@ -167,8 +166,17 @@ int main()
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, texture2);
 
+		glm::mat4 trans = glm::mat4(1.0f);
+		trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
+		trans = glm::rotate(trans, glm::radians(45.0f), glm::vec3(0.0, 0.0, 1.0));
+		trans = glm::scale(trans, glm::vec3((glm::sin(glfwGetTime()) + 1) * 0.5));
+
+		mixValue = (1.0 + sin(static_cast<float>(glfwGetTime()))) * 0.5;
+		
 		firstShader.use();
 		firstShader.setFloat("mixValue", mixValue);
+		glUniformMatrix4fv(glGetUniformLocation(firstShader.ID, "transform"), 1, GL_FALSE, glm::value_ptr(trans));
+
 		//更新uniform之前必须先使用程序,因为是在激活的程序中设置uniform的
 		// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glBindVertexArray(VAO);

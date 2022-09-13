@@ -1,2 +1,8 @@
 ﻿  main.cpp
+D:\CODE\learnOpenGL\learnOpenGL\main.cpp(172,69): warning C4244: “参数”: 从“double”转换到“T”，可能丢失数据
+          with
+          [
+              T=float
+          ]
+D:\CODE\learnOpenGL\learnOpenGL\main.cpp(174,61): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
   learnOpenGL.vcxproj -> D:\CODE\learnOpenGL\x64\Debug\learnOpenGL.exe
