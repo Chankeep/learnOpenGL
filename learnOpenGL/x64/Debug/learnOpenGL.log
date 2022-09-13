@@ -1,8 +1,10 @@
 ﻿  main.cpp
-D:\CODE\learnOpenGL\learnOpenGL\main.cpp(172,69): warning C4244: “参数”: 从“double”转换到“T”，可能丢失数据
-          with
-          [
-              T=float
-          ]
-D:\CODE\learnOpenGL\learnOpenGL\main.cpp(174,61): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+D:\CODE\learnOpenGL\learnOpenGL\main.cpp(64,11): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+D:\CODE\learnOpenGL\learnOpenGL\main.cpp(65,11): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+D:\CODE\learnOpenGL\learnOpenGL\main.cpp(68,16): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
+D:\CODE\learnOpenGL\learnOpenGL\main.cpp(69,16): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
+D:\CODE\learnOpenGL\learnOpenGL\main.cpp(70,10): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+D:\CODE\learnOpenGL\learnOpenGL\main.cpp(71,10): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+D:\CODE\learnOpenGL\learnOpenGL\main.cpp(96,10): warning C4244: “-=”: 从“double”转换到“float”，可能丢失数据
+D:\CODE\learnOpenGL\learnOpenGL\main.cpp(285,22): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
   learnOpenGL.vcxproj -> D:\CODE\learnOpenGL\x64\Debug\learnOpenGL.exe

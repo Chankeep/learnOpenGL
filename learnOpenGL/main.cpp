@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "shader.h"
 #include "image.h"
 #include <glm/glm.hpp>
@@ -8,7 +10,16 @@
 constexpr unsigned int SCR_WIDTH = 1200;
 constexpr unsigned int SCR_HEIGHT = 900;
 
-float mixValue = 0;
+glm::vec3 cameraPos(0.0f, 0.0f, 3.0f);
+glm::vec3 up(0.0f, 1.0f, 0.0f);
+glm::vec3 cameraFront(0.0f, 0.0f, -1.0f);
+
+bool firstMouse = true;
+float deltaTime = 0.0f; // 当前帧与上一帧的时间差
+float lastFrame = 0.0f; // 上一帧的时间
+float lastX = SCR_WIDTH / 2;
+float lastY = SCR_HEIGHT / 2;
+float fov = 45.0f;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -17,19 +28,80 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void processInput(GLFWwindow* window)
 {
+	float cameraSpeed = cameraSpeed = 2.5f * deltaTime;
+	glm::vec3 cameraRight = glm::normalize(glm::cross(cameraFront, up));
 	if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 	{
 		glfwSetWindowShouldClose(window, true);
 	}
-	else if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+	if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
-		mixValue += 0.001f;
-		if (mixValue > 1.f) mixValue = 1.0f;
+		cameraPos += cameraSpeed * glm::vec3(cameraFront.x, 0.0f, cameraFront.z);
 	}
-	else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+	if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 	{
-		mixValue -= 0.001f;
-		if (mixValue > 0.f) mixValue = 0.0f;
+		cameraPos -= cameraSpeed * glm::vec3(cameraFront.x, 0.0f, cameraFront.z);
+	}
+	if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	{
+		cameraPos -= cameraRight * cameraSpeed;
+	}
+	if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+	{
+		cameraPos += cameraRight * cameraSpeed;
+	}
+}
+
+float yaw = -90.0f;
+float pitch = 0.0f;
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+
+	
+	if (firstMouse)
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+	float xoffset = xpos - lastX;
+	float yoffset = lastY - ypos;
+	lastX = xpos;
+	lastY = ypos;
+
+	float sensitivity = 0.05f;
+	xoffset *= sensitivity;
+	yoffset *= sensitivity;
+
+	yaw += xoffset;
+	pitch += yoffset;
+
+	if (pitch > 89.0f)
+		pitch = 89.0f;
+	if (pitch < -89.0f)
+		pitch = -89.0f;
+
+	glm::vec3 front;
+	front.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
+	front.y = sin(glm::radians(pitch));
+	front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	cameraFront = glm::normalize(front);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	if (fov >= 1.0f && fov <= 90.0f)
+	{
+		fov -= yoffset;
+	}
+	if(fov<=1.0f)
+	{
+		fov = 1.0f;
+	}
+	if(fov>=90.0f)
+	{
+		fov = 90.0f;
 	}
 }
 
@@ -38,8 +110,8 @@ int main()
 	//一系列初始化操作
 	glfwInit();
 	//版本，MAJOR是主，MINOR是次，下面代表3.3版本
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	//glfw window creation
@@ -52,7 +124,9 @@ int main()
 	}
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	//glad: load all OpenGL function pointers
 	//GLAD是用来管理OpenGL的函数指针的，所以在调用任何OpenGL的函数之前我们需要初始化GLAD
 	if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
@@ -61,15 +135,53 @@ int main()
 		return -1;
 	}
 
+	glEnable(GL_DEPTH_TEST);
+
 	Shader firstShader("../Shaders/vertex.vert", "../Shaders/fragment.frag");
 	
 	//定义图形vertex
 	float vertices[] = {
-		//     ---- 位置 ----       - 纹理坐标 -
-			 0.5f,  0.5f, 0.0f,     1.0f, 1.0f,   // 右上
-			 0.5f, -0.5f, 0.0f,     1.0f, 0.0f,   // 右下
-			-0.5f, -0.5f, 0.0f,		0.0f, 0.0f,   // 左下
-			-0.5f,  0.5f, 0.0f,		0.0f, 1.0f    // 左上
+	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+	 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+	-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+	-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+	-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 	};
 
 	int indices[] = {
@@ -112,7 +224,7 @@ int main()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	int width, height, channels;
-	stbi_set_flip_vertically_on_load(true);
+
 	unsigned char* data = stbi_load("image/awesomeface.png", &width, &height, &channels, 0);
 	if (data)
 	{
@@ -146,42 +258,81 @@ int main()
 	}
 	stbi_image_free(data);
 
-
 	firstShader.use();
 	glUniform1i(glGetUniformLocation(firstShader.ID, "TEXTURE1"), 0);
 	firstShader.setInt("TEXTURE2", 1);
+
+	glm::vec3 cubePositions[] = {
+  glm::vec3(0.0f,  0.0f,  0.0f),
+  glm::vec3(2.0f,  5.0f, -15.0f),
+  glm::vec3(-1.5f, -2.2f, -2.5f),
+  glm::vec3(-3.8f, -2.0f, -12.3f),
+  glm::vec3(2.4f, -0.4f, -3.5f),
+  glm::vec3(-1.7f,  3.0f, -7.5f),
+  glm::vec3(1.3f, -2.0f, -2.5f),
+  glm::vec3(1.5f,  2.0f, -2.5f),
+  glm::vec3(1.5f,  0.2f, -1.5f),
+  glm::vec3(-1.3f,  1.0f, -1.5f)
+	};
+
 	//render loop
 	while(!glfwWindowShouldClose(window))
 	{
-		
 		//输入
 		processInput(window);
 
+		//计算时间
+		float currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
 		//渲染部分
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);//清空屏幕所用颜色
-		glClear(GL_COLOR_BUFFER_BIT);		 //清空
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);		 //清空
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture1);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, texture2);
 
-		glm::mat4 trans = glm::mat4(1.0f);
-		trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
-		trans = glm::rotate(trans, glm::radians(45.0f), glm::vec3(0.0, 0.0, 1.0));
-		trans = glm::scale(trans, glm::vec3((glm::sin(glfwGetTime()) + 1) * 0.5));
-
-		mixValue = (1.0 + sin(static_cast<float>(glfwGetTime()))) * 0.5;
 		
+		glm::mat4 view = glm::mat4(1.0f);
+		view = glm::lookAt(cameraPos, cameraPos + cameraFront, up);
+
+		/*上面的也等于:
+		glm::mat4 view = glm::mat4(1.0f);
+		glm::mat4 viewRotate = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+		glm::mat4 viewTranslate = glm::mat4(1.0f);
+		glm::vec3 cameraDir = glm::normalize(center - eye);
+		glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDir));
+		glm::vec3 cameraUp = glm::cross(cameraDir, cameraRight);
+		viewRotate = glm::transpose(glm::mat4(glm::vec4(cameraRight, 0.0f), glm::vec4(cameraUp, 0.0f), glm::vec4(cameraDir, 0.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)));
+		viewTranslate = glm::transpose(glm::mat4(glm::vec4(1.0f, 0.0f, 0.0f, -eye.x), glm::vec4(0.0f, 1.0f, 0.0f, -eye.y), glm::vec4(0.0f, 0.0f, 1.0f, -eye.z), glm::vec4(glm::vec3(0.0f), 1.0f)));
+		view = viewRotate * viewTranslate;
+		lookAt计算过程*/
+
+		glm::mat4 projection = glm::mat4(1.0f);
+		projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+		// pass transformation matrices to the shader
+		firstShader.setMat4("P", projection); // note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
+		firstShader.setMat4("V", view);
 		firstShader.use();
-		firstShader.setFloat("mixValue", mixValue);
-		glUniformMatrix4fv(glGetUniformLocation(firstShader.ID, "transform"), 1, GL_FALSE, glm::value_ptr(trans));
 
 		//更新uniform之前必须先使用程序,因为是在激活的程序中设置uniform的
 		// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glBindVertexArray(VAO);
-		// glDrawArrays(GL_TRIANGLES, 0, 3);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+		for (unsigned int i = 0; i < 10; i++)
+		{
+			// calculate the model matrix for each object and pass it to shader before drawing
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, cubePositions[i]);
+			float angle = 20.0f * i;
+			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+			firstShader.setMat4("M", model);
+
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+		// glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

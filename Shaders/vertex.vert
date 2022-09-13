@@ -4,11 +4,13 @@ layout(location = 1) in vec2 texcoord;
 
 out vec2 uv;
 
-uniform mat4 transform;
+uniform mat4 M;
+uniform mat4 V;
+uniform mat4 P;
 
 void main()
 {
 	
-	gl_Position = transform * vec4(vertex, 1.0);
-	uv = vec2(texcoord.x, 1- texcoord.y);
+	gl_Position = P * V * M * vec4(vertex, 1.0);
+	uv = vec2(texcoord.x, 1 - texcoord.y);
 }
