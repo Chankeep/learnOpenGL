@@ -1,5 +1,67 @@
-# **learnOpenGL**
-## 开始学习**openGL**啦，有了图形学和c++基础学起来还是轻松很多，慢慢加油吧！
+# **learnOpenGL** :clown_face:
+---
+- 开始学习**openGL**啦，有了图形学和c++基础学起来还是轻松很多，慢慢加油吧！
+---
+## 进度
+- [x] 入门章节
+- [ ] 光照
+    - [x] 颜色
+    - [x] 基础光照
+    - [ ] 材质
+    - [ ] 光照贴图
+    - [ ] 投光物
+    - [ ] 多光源
+- [ ] 模型加载
+- [ ] 高级OpenGL
+- [ ] 高级关照
+- [ ] PBR
+- [ ] 实战
+## 更新部分
 ### update by chankkep on 2022/9/13
 - 入门章节全部完成，包括练习
-- 对学习引擎还是很有帮助的
+[复习链接](https://learnopengl-cn.github.io/01%20Getting%20started/10%20Review/)
+- 对学习引擎还是很有帮助的 :smiley:
+
+### update by chankkep on 2022/9/14
+- 增加了camera类，封装视角移动还有摄像机属性代码，方便使用
+- 完成到光照部分的基础光照，重现了phong光照模型
+
+## 笔记部分
+### 1. VBO、VAO、EBO（IBO）
+  - 是什么？
+      - 顶点缓冲对象(Vertex Buffer Object)： 一个调用显存并存储所有顶点数据供显卡使用的缓冲对象。
+      - 顶点数组对象(Vertex Array Object)： 存储缓冲区和顶点属性状态。
+      - 元素缓冲对象(Element Buffer Object，EBO)，也叫索引缓冲对象(Index Buffer Object，IBO)： 一个存储元素索引供索引化绘制使用的缓冲对象。
+### 2. view矩阵推导
+```C++
+    glm::mat4 view = glm::mat4(1.0f);
+    view = glm::lookAt(cameraPos, cameraPos + cameraFront, up);
+    //第一个参数是相机位置，第二个是相机方向，是Pos+front他就是永远看向相机的前方， up是（0，1，0）
+    lookAt计算过程
+    glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 viewRotate = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+    glm::mat4 viewTranslate = glm::mat4(1.0f);
+    glm::vec3 cameraDir = glm::normalize(center - eye);
+    glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDir));
+    glm::vec3 cameraUp = glm::cross(cameraDir, cameraRight);
+    viewRotate = glm::transpose(glm::mat4(glm::vec4(cameraRight, 0.0f), glm::vec4(cameraUp, 0.0f), glm::vec4(cameraDir, 0.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)));
+    viewTranslate = glm::transpose(glm::mat4(glm::vec4(1.0f, 0.0f, 0.0f, -eye.x), glm::vec4(0.0f, 1.0f, 0.0f, -eye.y), glm::vec4(0.0f, 0.0f, 1.0f, -eye.z), glm::vec4(glm::vec3(0.0f), 1.0f)));
+    view = viewRotate * viewTranslate;
+```
+### 3.纹理 
+ [网站](https://learnopengl-cn.github.io/01%20Getting%20started/06%20Textures/)
+- 纹理环绕方式：
+    - GL_REPEAT
+    - GL_MIRRORED_REPEAT
+    - GL_CLAMP_TO_EDGE
+    - GL_CLAMP_TO_BORDED
+    - 每个选项都可以使用glTexParameter*函数对单独的一个坐标轴设置（s、t（如果是使用3D纹理那么还有一个r）它们和x、y、z是等价的
+
+              glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+              glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+- 纹理过滤方式：
+    - GL_LINEAR
+    - GL_NEAREST
+### 4. 欧拉角推导
+- 非常清晰明了
+![File](https://uploads.disquscdn.com/images/6b3d3b11c2aa903864562b777a8531488ae4df63f5f022466c44f091e0eb1d44.jpg)

@@ -19,11 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="camera.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="shader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="camera.h" />
     <ClInclude Include="image.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="stb_image.h" />
@@ -31,6 +33,8 @@
   <ItemGroup>
     <None Include="..\README.md" />
     <None Include="..\Shaders\fragment.frag" />
+    <None Include="..\Shaders\lightfs.frag" />
+    <None Include="..\Shaders\lightvs.vert" />
     <None Include="..\Shaders\vertex.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
