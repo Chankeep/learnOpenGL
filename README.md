@@ -30,7 +30,7 @@
 ### update by chankkep on 2022/9/17
 - 这几天休息了会，今天才踩完坑效果才正确
 - 直接跳到法线贴图了，因为之前看shader精要的时候就从blinn-phong到法线贴图
-- 接下来更新可能会很慢，因为决定去肝SRP了 :clown_face:
+- 接下来更新可能会很慢，因为决定去肝数学还有建模了 :clown_face:
 ## 笔记部分
 ### 1. VBO、VAO、EBO（IBO）
   - 是什么？
